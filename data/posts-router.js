@@ -91,13 +91,20 @@ router.get('/:id/comments', (req, res) => {
 
 router.delete('/:id', (req, res) => {
     const id = req.params.id;
+    let deletedPost = {}; // makes it possible to return deleted post
+
+    Data.findById(id) // makes it possible to return deleted post
+        .then(response => {
+            deletedPost = response;
+        })
+        .catch(err => console.log('find post for delete error', err))
 
     Data.remove(id)
         .then(response => {
             if(response === 0) {
                 res.status(404).json({ message: "The post with the specified ID does not exist." })
             } else {
-                res.status(200).json({ message: "Post deleted successfully" })
+                res.status(200).json(deletedPost)
             }
         })
         .catch(err => {
