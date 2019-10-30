@@ -20,16 +20,26 @@ router.post('/', (req, res) => {
         })
 }})
 
-router.post('/:id/comments', (req, res) => { // not working correctly
+router.post('/:id/comments', (req, res) => {
     const comment = req.body;
-    // passing insertComment a nonexistant id breaks it
+    const id = req.body.post_id;
     if(!req.body.text) {
         res.status(400).json({ errorMessage: "Please provide text for the comment." })
     } else {
-        Data.insertComment(comment)
-            .then(response => res.status(201).json(comment))
-            .catch(err => console.log(err))
-    }
+        Data.findById(id)
+            .then(response => {
+                if(response.length === 0) {
+                    res.status(404).json({ message: "The post with the specified ID does not exist." })
+                } else {
+                    Data.insertComment(comment)
+                    .then(response => res.status(201).json(comment))
+                    .catch(err => {
+                        console.log('post comment error', err);
+                        res.status(500).json({ error: "There was an error while saving the comment to the database" })
+                    })
+                }
+            })
+        }
 })
 
 router.get('/', (req, res) => {
@@ -43,16 +53,15 @@ router.get('/', (req, res) => {
         })
 })
 
-router.get('/:id/comments', (req, res) => { // not working correctly
+router.get('/:id/comments', (req, res) => { 
     const id = req.params.id;
-    // don't know how to check if post exists
     Data.findById(id)
     .then(response => {
         if(response.length === 0){
             res.status(404).json({ message: "The post with the specified id does not exist" })
         } else {
             Data.findPostComments(id)
-        .then(comments => {
+            .then(comments => {
             res.status(200).json(comments)
         })
         .catch(err => {
